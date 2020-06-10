@@ -1,5 +1,5 @@
 <template>
-  <div class="home">
+  <div class="home" v-loading.fullscreen.lock="fullscreenLoading">
     <TopBar></TopBar>
     <div class="searchBar">
       <div class="searchInput">
@@ -8,7 +8,7 @@
           @keyup.enter="search"
           type="text"
           autocomplete="off"
-          placeholder="请输入存证编号"
+          placeholder="请输入存证哈希"
           value
           id="id_hash"
           style="vertical-align: middle;"
@@ -23,84 +23,14 @@
         >
       </div>
     </div>
-    <div class="content" v-if="firstFlag">
-      <p class="content_title">最新存证</p>
-      <div class="content_data">
-        <el-table
-          v-loading="$store.state.loading"
-          :data="listContent"
-          style="width: 100%"
-        >
-          <el-table-column
-            align="center"
-            prop="_txhash"
-            label="存证编号"
-            width="300"
-          ></el-table-column>
-          <el-table-column
-            prop="_ontId"
-            label="DNA ID"
-            width="300"
-            align="center"
-          ></el-table-column>
-          <el-table-column
-            prop="createTime"
-            label="创建时间"
-            width="300"
-            align="center"
-          ></el-table-column>
-          <el-table-column prop="详情" label="存证详情" align="center">
-            <template slot-scope="scope">
-              <el-button @click="lookConDetail(scope.$index)" type="text"
-                >点击查看详情</el-button
-              >
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </div>
-    <div class="searchContent" v-else>
-      <p class="searchTop">
-        <span class="search_title">存证信息</span>
-        <span class="num">共{{ allNum }}条</span>
-      </p>
-      <div class="search_data">
-        <el-table v-loading="loading" :data="searchContent" style="width: 100%">
-          <el-table-column
-            prop="_txhash"
-            label="存证编号"
-            width="300"
-            align="center"
-          ></el-table-column>
-          <el-table-column
-            prop="_ontId"
-            label="DNA ID"
-            width="300"
-            align="center"
-          ></el-table-column>
-          <el-table-column
-            prop="createTime"
-            label="创建时间"
-            width="300"
-            align="center"
-          ></el-table-column>
-          <el-table-column label="存证详情" align="center">
-            <template slot-scope="scope">
-              <el-button @click="lookSearDetail(scope.$index)" type="text"
-                >点击查看详情</el-button
-              >
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </div>
   </div>
 </template>
 <script>
 import TopBar from "./TopBar";
 import dateFormat from "../util/dateFormat";
-import { mapGetters } from "vuex";
-// import { clearInterval } from 'timers';
+import https from "@/api";
+import { getToken, setToken, setNews, getNews } from "@/utils/auth";
+
 export default {
   components: {
     TopBar
@@ -116,106 +46,33 @@ export default {
       type: "",
       searchUrl: "",
       intervalBlock2c: null,
-      intervalBlock2b: null
+      intervalBlock2b: null,
+      fullscreenLoading: false
     };
   },
-  created() {
-    //请求首页列表
-    let params = { pageNum: 1, pageSize: 10 };
-    this.type = sessionStorage.getItem("TYPE");
-    if (this.type === "2c") {
-      this.$store.dispatch("get2cHomeData", params);
-
-      clearInterval(this.intervalBlock2b);
-      this.intervalBlock2c = setInterval(() => {
-        this.$store.dispatch("get2cHomeData", params);
-      }, 10000);
-      this.searchUrl =
-        process.env.TOC_API_ROOT + "api/v1/c/attestation/explorer/hash";
-    } else {
-      this.$store.dispatch("getHomePageRecord", params);
-      clearInterval(this.intervalBlock2c);
-      this.intervalBlock2b = setInterval(() => {
-        this.$store.dispatch("getHomePageRecord", params);
-      }, 10000);
-      this.searchUrl =
-        process.env.API_ROOT + "api/v1/attestation/explorer/hash";
-    }
-  },
-  beforeDestroy() {
-    clearInterval(this.intervalBlock2c);
-    clearInterval(this.intervalBlock2b);
-  },
-  computed: {
-    ...mapGetters({ listContent: "getHomePageRecord" }) // 动态计算属性，相当于this.$store.getters.getHomePageRecord
-  },
+  created() {},
+  beforeDestroy() {},
+  computed: {},
   methods: {
-    //搜索内容
-    search() {
-      if (this.inputvalue.trim() != "") {
-        this.firstFlag = false; //变成search内容
-        this.loading = true;
-        this.getSearchData();
-      } else {
-        this.$confirm("请输入存证编号进行搜索", "提示", {
-          confirmButtonText: "确定",
-          cancelButtonText: "取消",
-          type: "warning"
-        })
-          .then(() => {
-            //确定
-            this.firstFlag = true;
-          })
-          .catch(() => {
-            this.firstFlag = true;
-          });
+    async search() {
+      if (!this.inputvalue) return;
+      if (!getToken() && !getNews("userName")) {
+        return this.$message.error("Please login first!");
       }
-    },
-    lookConDetail(index) {
-      //内容点击详情
-      this.$router.push({
-        path: "/detailEvidence/" + this.listContent[index].txhash
-      });
-    },
-    lookSearDetail(index) {
-      //搜索点击详情
-      this.$router.push({
-        path: "/detailEvidence/" + this.searchContent[index].txhash
-      });
-    },
-    getSearchData() {
-      clearInterval(this.intervalBlock2c);
-      clearInterval(this.intervalBlock2b);
-      this.$http
-        .post(this.searchUrl, { hash: this.inputvalue })
-        .then(response => {
-          this.loading = false;
-          if (response.data.result != "") {
-            this.searchContent = response.data.result;
-            this.searchContent.forEach(item => {
-              item.createTime = dateFormat.format(
-                "yyyy-MM-dd hh:mm:ss",
-                new Date(item.createTime)
-              );
-              item._txhash =
-                item.txhash.substring(0, 10) +
-                "....." +
-                item.txhash.substring(item.txhash.length - 5);
-              item._ontId =
-                item.dnaid.substring(0, 10) +
-                "....." +
-                item.dnaid.substring(item.dnaid.length - 5);
-            });
-            this.allNum = this.searchContent.length;
-          } else {
-            this.searchContent = [];
-            this.allNum = 0;
+      this.fullscreenLoading = true;
+      let result = await https.searchFn(this.inputvalue);
+      console.log(result);
+      this.fullscreenLoading = false;
+      if (result.desc == "SUCCESS" && result.error === 0) {
+        this.$router.push({
+          name: "detailEvidence",
+          params: {
+            id: this.inputvalue
           }
-        })
-        .catch(error => {
-          this.loading = false;
-          this.$message({ type: "error", message: error });
         });
+      } else {
+        this.$message.error(result.desc);
+      }
     }
   }
 };

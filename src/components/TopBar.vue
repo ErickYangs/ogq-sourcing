@@ -1,13 +1,8 @@
 <template>
   <div id="topBar">
     <el-row type="flex" class="row-bg" justify="end" v-if="noLogin">
-      <el-col :span="16">
-        <img
-          id="logo"
-          src="../assets/img/Rectangle.jpg"
-          alt
-          @click="toHomePage"
-        />
+      <el-col :span="16" class="flex_row_clo">
+        <img id="logo" src="../assets/1544778551.png" alt @click="toHomePage" />
       </el-col>
       <el-col :span="8">
         <el-button
@@ -15,34 +10,24 @@
           size="mini"
           round
           @click="$router.push({ path: '/signin' })"
-          >我要存证</el-button
+          >登录/注册</el-button
         >
       </el-col>
     </el-row>
     <el-row type="flex" class="row-bg" justify="end" v-else>
       <el-col :span="12">
-        <img
-          id="logo"
-          src="../assets/img/Rectangle.jpg"
-          alt
-          @click="toHomePage"
-        />
+        <img id="logo" src="../assets/1544778551.png" alt @click="toHomePage" />
       </el-col>
-      <el-col :span="12" style="text-align:right;">
+      <el-col class="aliens" :span="12" style="text-align:right;">
         <img src="../assets/img/avatar.png" style="width:3rem;" alt />
-        <span>{{ username }}</span>
-        <el-button type="info" round size="mini" @click="signOut"
-          >退出登录</el-button
-        >
-        <el-button type="info" round size="mini" @click="toNewEvidence"
-          >我要存证</el-button
-        >
+        <span>{{ userName }}</span>
         <el-button
+          style="margin-left: 20px;"
           type="info"
           round
           size="mini"
-          @click="$router.push({ name: 'evidenceRecord' })"
-          >存证记录</el-button
+          @click="signOut"
+          >退出登录</el-button
         >
       </el-col>
     </el-row>
@@ -50,25 +35,21 @@
 </template>
 
 <script>
+import { getToken, setToken, setNews, getNews, clear } from "@/utils/auth";
+
 export default {
   data() {
     return {
       cusor: "cusor",
       noLogin: true, //默认未登录
-      username: "" //用户名
+      userName: "", //用户名
+      token: ""
     };
   },
   methods: {
     toLogin() {
       //登录
-      var callback_url = window.location.origin + "/#/newEvidence";
-      // var appontid = 'did:ont:ANqiHycikgyzkfz36faP5ymXLVg1uovhXh';
-      var appname = "OntSourcing";
-      var value = window.encodeURIComponent(
-        process.env.APP_ONTID + "&" + appname + "&" + callback_url + "&" + "zh"
-      );
-      // window.location.href = "http://139.219.136.188:10390?params=" + value;
-      window.location.href = process.env.ONTID_SIGININ + value;
+      this.$router.push({ name: "signin" });
     },
     toNewEvidence() {
       this.$router.push({ name: "newEvidence" });
@@ -91,58 +72,41 @@ export default {
         .then(() => {
           //确定
           (this.noLogin = true), //默认未登录
-            sessionStorage.removeItem("ontid");
-          sessionStorage.removeItem("access_token");
-          sessionStorage.clear();
+            clear();
           this.$router.push({ name: "Home" });
         })
         .catch(() => {});
     }
   },
   mounted() {
-    //得到token值保存session
-    if (sessionStorage.getItem("ontid")) {
+    if (getToken() && getNews("userName")) {
       this.noLogin = false;
-      this.username = sessionStorage.getItem("ontid");
-      this.username = this.username.replace(/ont/, "dna");
-    } else {
-      var result = this.$route.query.result;
-
-      if (result) {
-        var response = JSON.parse(decodeURIComponent(result));
-        if (!response.ontid || !response.access_token) {
-          this.$message({ type: "error", message: "登录失败，请重试！" });
-          this.$router.push({ name: "Home" });
-          return;
-        }
-        sessionStorage.setItem("ontid", response.ontid);
-        sessionStorage.setItem("access_token", response.access_token);
-        this.username = sessionStorage.getItem("ontid");
-        this.username = this.username.replace(/ont/, "dna");
-        this.noLogin = false;
-      }
+      (this.userName = getNews("userName")), (this.token = getToken());
     }
   }
 };
 </script>
 
-<style scoped>
+<style lang="less" scoped>
 #topBar {
   width: 100%;
-  /* height: 2rem;
-    line-height: 2rem;
-    padding: 0 2rem; */
   height: 4rem;
   line-height: 4rem;
   padding: 0 5rem;
   background: #fff;
 }
+.aliens {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+}
 #logo {
   cursor: pointer;
+  display: block;
+  width: 90px;
+  transform: translateY(10px);
 }
 .el-button--info {
-  /* border-radius: 1rem;
-    padding: .3rem 1rem; */
   color: #fff;
   background-color: #000;
 }

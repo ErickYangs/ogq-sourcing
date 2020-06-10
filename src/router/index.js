@@ -9,36 +9,39 @@ import DetailEvidence from "@/components/DetailEvidence";
 import SignUp from "@/components/SignUp";
 import SignIn from "@/components/SignIn";
 import axios from "axios";
+import { getToken, setToken, setNews, getNews } from "@/utils/auth";
+import { Message } from "element-ui";
 
 Vue.use(Router);
 
 const router = new Router({
+  mode: "history",
   routes: [
     {
       path: "/",
       name: "Home",
       component: Home
     },
-    {
-      path: "/newEvidence",
-      name: "newEvidence",
-      component: NewEvidence
-    },
-    {
-      path: "/reviewEvidence",
-      name: "reviewEvidence",
-      component: ReviewEvidence
-    },
-    {
-      path: "/confirm",
-      name: "confirm",
-      component: Confirm
-    },
-    {
-      path: "/evidenceRecord",
-      name: "evidenceRecord",
-      component: EvidenceRecord
-    },
+    // {
+    //   path: "/newEvidence",
+    //   name: "newEvidence",
+    //   component: NewEvidence
+    // },
+    // {
+    //   path: "/reviewEvidence",
+    //   name: "reviewEvidence",
+    //   component: ReviewEvidence
+    // },
+    // {
+    //   path: "/confirm",
+    //   name: "confirm",
+    //   component: Confirm
+    // },
+    // {
+    //   path: "/evidenceRecord",
+    //   name: "evidenceRecord",
+    //   component: EvidenceRecord
+    // },
     {
       path: "/detailEvidence/:id",
       name: "detailEvidence",
@@ -65,47 +68,19 @@ function jumpTo(target, origin, next) {
 }
 
 // Route guard judges access_token
-// router.beforeEach(async (to, from, next) => {
-  // let toPath = to.name;
-  // if (toPath === "newEvidence") {
-  //   let result = to.query.result;
-  //   if (result) {
-  //     let response = JSON.parse(decodeURIComponent(to.query.result));
-  //     sessionStorage.setItem("ontid", response.ontid);
-  //     sessionStorage.setItem("access_token", response.access_token);
-  //     next();
-  //     return;
-  //   }
-  // } else if (toPath === "detailEvidence" || toPath == "signup" || toPath == 'signin') {
-  //   next();
-  //   return;
-  // }
-
-  // let access_token = sessionStorage.getItem("access_token");
-  // // if no access_token then go web_home
-  // if (!access_token) {
-  //   sessionStorage.clear();
-  //   jumpTo({ name: "Home" }, to, next);
-  //   return;
-  // }
-
-  // try {
-  //   let res = await axios.post(process.env.API_ROOT + "api/v1/token/check", {
-  //     access_token
-  //   });
-  //   if (!res.data.result) {
-  //     sessionStorage.clear();
-  //     jumpTo({ name: "Home" }, to, next);
-  //   } else {
-  //     // sessionStorage.setItem('TYPE', res.data.result)
-  //     sessionStorage.setItem("TYPE", "2b");
-  //     next();
-  //   }
-  // } catch (error) {
-  //   sessionStorage.clear();
-  //   jumpTo({ name: "Home" }, to, next);
-  //   return;
-  // }
-// });
+router.beforeEach(async (to, from, next) => {
+  let toPath = to.name;
+  if (toPath == "detailEvidence") {
+    if (!getToken() && !getNews("userName")) {
+      Message({ message: "Please login first!", type: "error" });
+      jumpTo({ name: "Home" }, to, next);
+      return;
+    } else {
+      next();
+      return;
+    }
+  }
+  next();
+});
 
 export default router;

@@ -1,115 +1,65 @@
-import axios from 'axios';
+import axios from 'axios'
+import { Message } from 'element-ui'
+import { getToken, setToken } from '@/utils/auth'
+import store from '@/vuex'
+import router from '@/router'
 
-//http request 拦截器
-axios.interceptors.request.use(
-  config => {
-    // const token = getCookie('名称');注意使用的时候需要引入cookie方法，推荐js-cookie
-    config.data = JSON.stringify(config.data);
-    config.headers = {
-      'Content-Type':'application/json;charset=utf-8'
+// axios.defaults.headers.post['Content-Type'] = 'application/json'
+const service = axios.create({
+  baseURL: process.env.VUE_APP_API,
+  timeout: 30000, // request timeout
+  headers: { 'Content-Type': 'application/json' }
+})
+// request interceptor
+service.interceptors.request.use(
+  (config) => {
+    // do something before request is sent
+    const token = getToken()
+    if (token) {
+      config.headers.common['Authorization'] = token
     }
-    config.headers["X-Requested-With"]="XMLHttpRequest";
-    // if(token){
-    //   config.params = {'token':token}
-    // }
-    return config;
-  },
-  error => {
-    return Promise.reject(err);
-  }
-);
 
-
-//http response 拦截器
-axios.interceptors.response.use(
-  response => {
-    if(response.data.errCode ==2){
-      router.push({
-        path:"/login",
-        querry:{redirect:router.currentRoute.fullPath}//从哪个页面跳转
-      })
-    }
-    return response;
+    config.data = JSON.stringify(config.data)
+    // config.headers['Authorization'] = getToken() || ''
+    // console.log(localStorage.getItem('token'))
+    return config
   },
-  error => {
+  (error) => {
+    // do something with request error
+    console.log(error) // for debug
     return Promise.reject(error)
   }
 )
 
+// response interceptor
+service.interceptors.response.use(
+  (response) => {
+    if (response.headers.authorization) {
+      setToken(response.headers.authorization)
+    }
+    const res = response.data
+    return res
+  },
+  (error) => {
+    const rest = error.response
+    console.error(rest) // for debug
+    if (rest) {
+      if (rest.status === 400) {
+        Message({ message: rest.data.desc, type: 'error' })
+      } else if (rest.status === 401) {
+        Message({ message: 'Please login again!', type: 'error' })
+        store.dispatch('account/logout')
+        store.commit('home/CHANGE_SHOW_FULL', false)
+        store.commit('apidetail/SET_API_KEY', {
+          apiKey: ''
+        })
+        router.push({ path: '/' })
+      }
+    } else {
+      Message({ message: 'Api Error, Please Try Again!', type: 'error' })
+    }
+    return Promise.reject(error)
+  }
+)
 
-/**
- * 封装get方法
- * @param url
- * @param data
- * @returns {Promise}
- */
-
-export function fetch(url,params={}){
-  return new Promise((resolve,reject) => {
-    axios.get(url,{
-      params:params
-    })
-    .then(response => {
-      resolve(response.data);
-    })
-    .catch(err => {
-      reject(err)
-    })
-  })
-}
-
-
-/**
- * 封装post请求
- * @param url
- * @param params
- * @returns {Promise}
- */
-
- export function post(url,params = {}){
-   return new Promise((resolve,reject) => {
-     axios.post(url,params)
-          .then(response => {
-            resolve(response);
-          })
-          .catch(error=>{
-            reject(error)
-          })
-   })
- }
-
- /**
- * 封装patch请求
- * @param url
- * @param data
- * @returns {Promise}
- */
-
-export function patch(url,data = {}){
-  return new Promise((resolve,reject) => {
-    axios.patch(url,data)
-         .then(response => {
-           resolve(response.data);
-         },err => {
-           reject(err)
-         })
-  })
-}
-
- /**
- * 封装put请求
- * @param url
- * @param data
- * @returns {Promise}
- */
-
-export function put(url,data = {}){
-  return new Promise((resolve,reject) => {
-    axios.put(url,data)
-         .then(response => {
-           resolve(response.data);
-         },err => {
-           reject(err)
-         })
-  })
-}
+export default service

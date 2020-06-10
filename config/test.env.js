@@ -8,5 +8,6 @@ module.exports = merge(devEnv, {
   fileUrl: '"/static/dna-sourcing-template.xlsx"',
   ONTID_SIGININ: '"http://139.219.136.188:10390?params="',
   TOC_API_ROOT: '"http://172.168.3.68:9088/"',
-  JWT_API: '"http://172.168.3.68:7091"'
+  JWT_API: '"http://172.168.3.68:7091"',
+  VUE_APP_API: '"http://128.1.40.9:2030"'
 });

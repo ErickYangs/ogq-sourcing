@@ -1,5 +1,5 @@
 <template>
-  <div class="sign">
+  <div class="sign" v-loading.fullscreen.lock="fullscreenLoading">
     <div class="sign_box">
       <i @click="$router.push({ path: '/' })" class="tohome el-icon-upload"></i>
       <div class="title">
@@ -14,8 +14,8 @@
           label-width="80px"
           class="demo-ruleForm"
         >
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="ruleForm.username"></el-input>
+          <el-form-item label="用户名" prop="userName">
+            <el-input v-model="ruleForm.userName"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input type="password" v-model="ruleForm.password"></el-input>
@@ -33,23 +33,23 @@
 </template>
 
 <script>
+import https from "@/api";
+import { getToken, setToken, setNews } from "@/utils/auth";
+
 export default {
   data() {
     return {
       ruleForm: {
-        username: "",
+        userName: "",
         password: ""
       },
       rules: {
-        username: [
+        userName: [
           { required: true, message: "请输入用户名", trigger: "blur" }
         ],
         password: [{ required: true, message: "请输入密码", trigger: "blur" }]
       },
-      dnaId: "",
-      access_token: ""
-      // sessionStorage.setItem("ontid", response.ontid);
-      // sessionStorage.setItem("access_token", response.access_token);
+      fullscreenLoading: false
     };
   },
   methods: {
@@ -57,7 +57,7 @@ export default {
       this.$refs[formName].validate(valid => {
         if (valid) {
           //   alert('submit!');
-          this.createDNAID();
+          this.handlerRegister();
         } else {
           console.log("error submit!!");
           return false;
@@ -67,47 +67,28 @@ export default {
     resetForm(formName) {
       this.$refs[formName].resetFields();
     },
-    async createDNAID() {
+    async handlerRegister() {
+      this.fullscreenLoading = true;
       try {
-        let result = await this.$http.post(
-          process.env.API_ROOT + "/api/v1/dnaid/create",
-          this.ruleForm
-        );
-        // console.log("signresult", result);
-        if (result.data.desc === "SUCCESS" && result.data.result) {
-          this.dnaId = result.data.result;
-          this.createJWT();
-          // let access_token = "eyJ0eXAiOiJKV1QiLCJhbGciOiJFUzI1NiJ9.eyJhdWQiOiJkaWQ6b250OkFVRG11NEoyVzF2cUpIRHRMUDhVeEhhdWoyZUtzUUh4dTYiLCJpc3MiOiJkaWQ6b250OkFhdlJRcVhlOVByYVY1dFlnQnF2VjRiVXE4TFNzdmpjV1MiLCJleHAiOjE1NTcyODM2MTAsImlhdCI6MTU1NzE5NzIxMCwianRpIjoiYmQ5NTZhNGI1YzYxNGYxN2I2YTgxNDkyZDI5NDIyYTQiLCJjb250ZW50Ijp7InR5cGUiOiJhY2Nlc3NfdG9rZW4iLCJvbnRpZCI6ImRpZDpvbnQ6QWExWFBhcEpIR0dqSFF0TjJIZHliOUFQdjdIZmlZeHRSeiJ9fQ.MDFiMjFkMjg5OGJmYjZlZGQzMmM5ZjY0ZWIxMDA0OGYxNGNkOGE2MTBhYTZmZGNiZTg4OWQyNzI0MjMwZDVjMjk3Y2Q3ZDhjMzlhOGYzZDJkYjE1YzFhMTcxM2Y3OTU4ZjkzYzRjOGI2NmU2ODM5YmFhNjE4NWRjMTlkZjU3YThkYQ"
-          // sessionStorage.setItem("ontid", this.dnaId);
-          // sessionStorage.setItem("access_token", access_token);
-          // this.$router.push({ path: '/' })
-        } else {
-          this.$message({ type: "error", message: result.data.desc });
-          return;
-        }
-      } catch (error) {
-        this.$message({ type: "error", message: error });
-        throw error;
-      }
-    },
-    async createJWT() {
-      try {
-        let result = await this.$http.post(
-          process.env.API_ROOT + "api/v1/dnaid/token",
-          { user_dnaid: this.dnaId, password: this.ruleForm.password }
-        );
-        if (result.data.desc === "SUCCESS" && result.data.result) {
-          this.access_token = result.data.result.access_token;
-          sessionStorage.setItem("ontid", this.dnaId);
-          sessionStorage.setItem("access_token", this.access_token);
+        let params = { ...this.ruleForm };
+        params.password = this.$utils.Encrypt(params.password);
+        console.log(params);
+        let result = await https.register(params);
+        console.log(result);
+        this.fullscreenLoading = false;
+        if (result.desc == "SUCCESS" && result.error === 0) {
+          console.log(result.result);
+          setNews("userName", result.result.userName);
+          setToken(result.result.token);
+          this.$message.success("SignUp Success!");
           this.$router.push({ name: "Home" });
-          this.$message({ type: "success", message: "Successful" });
         } else {
-          return this.$message({ type: "error", message: result.data.msg });
+          this.$message.error(result.desc);
         }
       } catch (error) {
-        return this.$message({ type: "error", message: error });
+        this.fullscreenLoading = false;
       }
+      this.fullscreenLoading = false;
     }
   }
 };

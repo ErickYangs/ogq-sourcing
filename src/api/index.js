@@ -1,7 +1,24 @@
-const BASE_URL = process.env.API_ROOT;
-import { post, fetch } from "./http";
+import request from "@/utils/request";
+
 export default {
-  getHomePageRecord: p => post(BASE_URL + "api/v1/attestation/explorer", p), //获取首页数据
-  get2cHomeData: p =>
-    post(process.env.TOC_API_ROOT + "api/v1/c/attestation/explorer", p) //获取首页数据
+  register(data) {
+    return request({
+      url: `/api/v1/source/register`,
+      method: "POST",
+      data
+    });
+  },
+  loginFn(data) {
+    return request({
+      url: `/api/v1/source/login`,
+      method: "POST",
+      data
+    });
+  },
+  searchFn(data) {
+    return request({
+      url: "/api/v1/source/" + data,
+      method: "GET"
+    });
+  }
 };

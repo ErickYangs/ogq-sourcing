@@ -1,5 +1,5 @@
 <template>
-  <div class="sign">
+  <div class="sign" v-loading.fullscreen.lock="fullscreenLoading">
     <div class="sign_box">
       <i @click="$router.push({ path: '/' })" class="tohome el-icon-upload"></i>
       <div class="title">
@@ -14,8 +14,8 @@
           label-width="80px"
           class="demo-ruleForm"
         >
-          <el-form-item label="用户名" prop="username">
-            <el-input v-model="ruleForm.username"></el-input>
+          <el-form-item label="用户名" prop="userName">
+            <el-input v-model="ruleForm.userName"></el-input>
           </el-form-item>
           <el-form-item label="密码" prop="password">
             <el-input type="password" v-model="ruleForm.password"></el-input>
@@ -33,21 +33,23 @@
 </template>
 
 <script>
+import https from "@/api";
+import { getToken, setToken, setNews } from "@/utils/auth";
+
 export default {
   data() {
     return {
       ruleForm: {
-        username: "",
+        userName: "",
         password: ""
       },
       rules: {
-        username: [
+        userName: [
           { required: true, message: "请输入用户名", trigger: "blur" }
         ],
         password: [{ required: true, message: "请输入密码", trigger: "blur" }]
       },
-      dnaId: "",
-      access_token: ""
+      fullscreenLoading: false
     };
   },
   methods: {
@@ -66,29 +68,27 @@ export default {
       this.$refs[formName].resetFields();
     },
     async sign() {
+      this.fullscreenLoading = true;
       try {
-        let result = await this.$http.post(
-          process.env.API_ROOT + "api/v1/dnaid/login",
-          this.ruleForm
-        );
-        // console.log('signin', result)
-        if (result.data.desc === "SUCCESS") {
-          this.dnaId = result.data.result.user_dnaid;
-          this.access_token = result.data.result.access_token;
-          sessionStorage.setItem("ontid", this.dnaId);
-          sessionStorage.setItem("access_token", this.access_token);
-          this.$router.push({ path: "/" });
-          this.$message({ type: "success", message: "Successful" });
+        let params = { ...this.ruleForm };
+        params.password = this.$utils.Encrypt(params.password);
+        let result = await https.loginFn(params);
+        console.log(result);
+        if (result.desc == "SUCCESS" && result.error === 0) {
+          console.log(result.result);
+          setNews("userName", result.result.userName);
+          setToken(result.result.token);
+          this.$message.success("SignIn Success!");
+          this.$router.push({ name: "Home" });
         } else {
-          this.$message({ type: "error", message: "Sign Fail" });
-          return;
+          this.$message.error(result.desc);
         }
-      } catch (error) {
-        this.$message({ type: "error", message: error });
-        throw error;
-        return false;
-      }
+      } catch (error) {}
+      this.fullscreenLoading = false;
     }
+  },
+  mounted() {
+    console.log(this.$utils, https);
   }
 };
 </script>

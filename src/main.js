@@ -3,16 +3,19 @@
 import Vue from "vue";
 import App from "./App";
 import router from "./router";
-import axios from "axios";
+// import axios from "axios";
 import ElementUI from "element-ui";
 import "element-ui/lib/theme-chalk/index.css";
 import store from "./vuex";
 import { Message } from "element-ui";
+import utils from './utils'
 
 Vue.use(ElementUI);
 Vue.component(Message.name, Message);
 
-Vue.prototype.$http = axios;
+// Vue.prototype.$http = axios;
+Vue.prototype.$utils = utils;
+
 
 Vue.config.productionTip = false;
 

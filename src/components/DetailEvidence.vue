@@ -1,202 +1,133 @@
 <template>
-  <div class="detailEvidence">
-    <div class="topBar">
-      <img
-        src="../assets/img/Rectangle.jpg"
-        id="detailLogo"
-        alt
-        @click="toHomePage"
-      />
-    </div>
-    <div class="detainCon" v-loading="fullscreenLoading">
-      <div class="detailImg" v-if="haveImg">
-        <div class="img_title">证书图片</div>
-        <div class="imgDetail">
-          <div class="work-group absolute">
-            <div class="group">Group :</div>
-            <div class="group">{{ workData[0] }}</div>
-          </div>
-          <div class="work-name absolute">{{ workData[1] }}</div>
-          <div class="work-trustAnchor absolute">
-            <div class="trustAnchor">Trust Anchor :</div>
-            <div class="trustAnchor">{{ workData[2] }}</div>
-          </div>
-          <div class="work-desc absolute">
-            <div class="desc">Description:{{ workData[3] }}</div>
-          </div>
-          <div class="work-crypto absolute">
-            <div class="crypto">crypto_function</div>
-            <div class="upload">SHA256</div>
-          </div>
-          <div class="work-uploadtime absolute">
-            <div class="crypto">uploadTime</div>
-            <div class="upload">{{ detailData._createTime }}</div>
-          </div>
-          <!-- <div class="work-logo absolute"></div> -->
-          <div class="work-hash absolute">
-            <div class="hash">WorkHash:{{ detailData.txhash }}</div>
-          </div>
-        </div>
-      </div>
-      <div class="detailCon">
-        <div style="padding:0 6%;">
-          <div class="detail-title">存证详情</div>
-          <div class="con">
-            <div>
-              存证编号：
-              <p>{{ detailData.txhash }}</p>
+  <div>
+    <TopBar></TopBar>
+
+    <div class="detailEvidence" v-loading.fullscreen.lock="fullscreenLoading">
+      <div class="detainCon">
+        <div class="detailCon" v-if="detailData">
+          <div style="padding:0 6%;">
+            <div class="detail-title">存证详情</div>
+            <div class="con">
+              <div>
+                blockHeight:
+                <p
+                  class="cuspoint"
+                  @click="toExploreHeight(detailData.blockHeight)"
+                >
+                  {{
+                    detailData.blockHeight == 0 ? "" : detailData.blockHeight
+                  }}
+                </p>
+              </div>
             </div>
-          </div>
-          <div class="con">
-            <div>
-              存证者 DNAID：
-              <p>{{ detailData.dnaid }}</p>
+            <div class="con">
+              <div>
+                txHash:
+                <p class="cuspoint" @click="toHash(detailData.txHash)">
+                  {{ detailData.txHash }}
+                </p>
+              </div>
             </div>
-          </div>
-          <div class="con">
-            <div>
-              被存证者 DNAID：
-              <p>{{ detailData.companyDnaid }}</p>
+            <div class="con">
+              <div>
+                size:
+                <p>{{ detailData.size == 0 ? "" : detailData.size }}</p>
+              </div>
             </div>
-          </div>
-          <div class="con">
-            <div>
-              创建时间：
-              <p>{{ detailData.createTime }}</p>
+            <div class="con">
+              <div>
+                root:
+                <p>{{ detailData.root }}</p>
+              </div>
             </div>
-          </div>
-          <div class="con">
-            <div>
-              区块高度：
-              <p>{{ detailData.height }}</p>
-            </div>
-          </div>
-          <div class="con">
-            <div>
-              时间戳：
-              <p>{{ detailData.timestamp }}</p>
-            </div>
-          </div>
-          <div class="con">
-            <div>
-              存证哈希：
-              <p>{{ detailData.filehash }}</p>
-            </div>
-          </div>
-          <div class="con">
-            <div>
-              详情：
-              <p v-if="detailData.type == 'IMAGE'">
-                <a :href="detailData.imgUrl">{{ detailData.imgUrl }}</a>
-              </p>
-              <div class="timestampSign">
-                <div class="detailList" v-if="detailData.type == 'INDEX'">
-                  <div v-for="(item, index) in workData" :key="index">
-                    <p>{{ item }}</p>
-                    <!-- <img :src="item" alt="" /> -->
-                  </div>
-                  <div class="imgBox">
-                    <img
-                      v-for="(item, index) in imgArr"
-                      :src="item"
-                      :key="index"
-                      alt=""
-                    />
-                  </div>
-                </div>
+            <div class="con" v-for="(value, key) in detailData.data" :key="key">
+              <div>
+                {{ key }}:
+                <p>{{ value }}</p>
               </div>
             </div>
           </div>
+        </div>
+        <div class="no_data" v-else>
+          No Data
         </div>
       </div>
     </div>
   </div>
 </template>
 <script>
-import dateFormat from "../util/dateFormat";
+import https from "@/api";
+import TopBar from "./TopBar";
+
 export default {
   data() {
     return {
-      fullscreenLoading: false, //加载
-      haveImg: false, //是否有证书图片
-      hash: "",
-      workData: [], //图片上的内容
-      detailData: {}, //详情数据
-      toUrl: "",
-      imgArr: []
+      fullscreenLoading: false,
+      detailData: null,
+      codes: ""
     };
   },
+  components: {
+    TopBar
+  },
   methods: {
-    toHomePage() {
-      this.$router.push({ name: "Home" });
+    toExploreHeight(data) {
+      if (process.env.NODE_ENV == "production") {
+        window.open("https://explorer.ont.io/block/" + data, "_blank");
+      } else {
+        window.open(
+          "https://explorer.ont.io/block/" + data + "/testnet",
+          "_blank"
+        );
+      }
     },
-    getDetail() {
-      this.$http
-        .post(this.toUrl, {
-          hash: this.hash
-        })
-        .then(response => {
-          this.fullscreenLoading = false;
-          this.detailData = response.data.result[0];
-          this.detailData._createTime = this.detailData.createTime.split(
-            "T"
-          )[0];
-          this.detailData.createTime = dateFormat.format(
-            "yyyy-MM-dd hh:mm:ss",
-            new Date(this.detailData.createTime)
-          );
-          this.detailData.timestamp = dateFormat.format(
-            "yyyy-MM-dd hh:mm:ss",
-            new Date(this.detailData.timestamp)
-          );
-          if (this.detailData.type == "") {
-            //类型为空
-            this.haveImg = false;
-          } else if (this.detailData.type == "IMAGE") {
-            //图片
-            this.haveImg = false;
-            this.detailData.imgUrl = JSON.parse(
-              this.detailData.detail
-            )[0].imgUrl;
-          } else if (this.detailData.type == "INDEX") {
-            //目录
-            this.haveImg = true;
-            let textData = JSON.parse(this.detailData.detail).context.text;
-            if (!textData) {
-              textData = JSON.parse(this.detailData.detail).context.text;
-            }
-            this.workData = textData;
-            var imgHashData = JSON.parse(this.detailData.detail).context.image;
-            for (var i in imgHashData) {
-              if (imgHashData[i]) {
-                this.imgArr.push(imgHashData[i]);
-              }
-            }
-          } else if (this.detailData.type == "TEXT") {
-            this.haveImg = false;
-          }
-        })
-        .catch(error => {
-          this.fullscreenLoading = false;
-          this.$message({ type: "error", message: error });
-        });
+    toHash(data) {
+      if (process.env.NODE_ENV == "production") {
+        window.open("https://explorer.ont.io/transaction/" + data, "_blank");
+      } else {
+        window.open(
+          "https://explorer.ont.io/transaction/" + data + "/testnet",
+          "_blank"
+        );
+      }
+    },
+    async getDetail() {
+      this.fullscreenLoading = true;
+      try {
+        let result = await https.searchFn(this.codes);
+        this.fullscreenLoading = false;
+        if (result.desc == "SUCCESS" && result.error === 0) {
+          this.detailData = result.result;
+        }
+      } catch (error) {}
+      this.fullscreenLoading = false;
     }
   },
   mounted() {
-    this.fullscreenLoading = true;
-    this.hash = this.$route.params.id;
-    let type = sessionStorage.getItem("TYPE");
-    if (type === "2c") {
-      this.toUrl =
-        process.env.TOC_API_ROOT + "api/v1/c/attestation/explorer/hash";
-    } else {
-      this.toUrl = process.env.API_ROOT + "api/v1/attestation/explorer/hash";
-    }
+    this.codes = this.$route.params.id;
     this.getDetail();
   }
 };
 </script>
-<style scoped>
+<style lang="less" scoped>
+.no_data {
+  font-size: 18px;
+  width: 100%;
+  min-height: 200px;
+  text-align: center;
+  line-height: 200px;
+}
+.con {
+  margin-bottom: 30px;
+  div {
+    font-size: 18px;
+    p {
+      font-size: 16px;
+      color: rgba(0, 0, 0, 0.6);
+    }
+  }
+}
+
 @media screen and (min-width: 320px) and (max-width: 414px) {
   html {
     font-size: 62.5% !important;
@@ -356,6 +287,9 @@ html {
 }
 #detailLogo {
   cursor: pointer;
+  display: block;
+  width: 90px;
+  transform: translateY(10px);
 }
 .img_title,
 .detail-title {
@@ -468,5 +402,14 @@ ul li {
   overflow: hidden;
   text-overflow: ellipsis;
   word-break: break-all;
+}
+.detail-title {
+  margin-bottom: 40px;
+}
+
+p.cuspoint {
+  cursor: pointer;
+  color: blue !important;
+  text-decoration: underline;
 }
 </style>
