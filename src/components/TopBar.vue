@@ -5,21 +5,21 @@
         <img id="logo" src="../assets/1544778551.png" alt @click="toHomePage" />
       </el-col>
       <el-col :span="8">
-        <el-button
+        <!-- <el-button
           type="info"
           size="mini"
           round
           @click="$router.push({ path: '/signin' })"
           >登录/注册</el-button
-        >
+        > -->
       </el-col>
     </el-row>
     <el-row type="flex" class="row-bg" justify="end" v-else>
       <el-col :span="12">
         <img id="logo" src="../assets/1544778551.png" alt @click="toHomePage" />
       </el-col>
-      <el-col class="aliens" :span="12" style="text-align:right;">
-        <img src="../assets/img/avatar.png" style="width:3rem;" alt />
+      <el-col class="aliens" :span="12" style="text-align: right;">
+        <!-- <img src="../assets/img/avatar.png" style="width:3rem;" alt />
         <span>{{ userName }}</span>
         <el-button
           style="margin-left: 20px;"
@@ -28,7 +28,7 @@
           size="mini"
           @click="signOut"
           >退出登录</el-button
-        >
+        > -->
       </el-col>
     </el-row>
   </div>
@@ -43,7 +43,7 @@ export default {
       cusor: "cusor",
       noLogin: true, //默认未登录
       userName: "", //用户名
-      token: ""
+      token: "",
     };
   },
   methods: {
@@ -67,7 +67,7 @@ export default {
       this.$confirm("确定退出当前登录吗？", "提示", {
         confirmButtonText: "确定",
         cancelButtonText: "取消",
-        type: "warning"
+        type: "warning",
       })
         .then(() => {
           //确定
@@ -76,14 +76,14 @@ export default {
           this.$router.push({ name: "Home" });
         })
         .catch(() => {});
-    }
+    },
   },
   mounted() {
     if (getToken() && getNews("userName")) {
       this.noLogin = false;
       (this.userName = getNews("userName")), (this.token = getToken());
     }
-  }
+  },
 };
 </script>
 

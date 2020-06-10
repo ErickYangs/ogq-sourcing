@@ -4,10 +4,10 @@
 
     <div class="detailEvidence" v-loading.fullscreen.lock="fullscreenLoading">
       <div class="detainCon">
-        <div class="detailCon" v-if="detailData">
-          <div style="padding:0 6%;">
-            <div class="detail-title">存证详情</div>
-            <div class="con">
+        <div class="detailCon">
+          <div style="padding:0 6%; margin-bottom: 40px">
+            <div class="detail-title">Detail Here</div>
+            <!-- <div class="con">
               <div>
                 blockHeight:
                 <p
@@ -19,22 +19,22 @@
                   }}
                 </p>
               </div>
-            </div>
-            <div class="con">
+            </div> -->
+            <!-- <div class="con">
               <div>
                 txHash:
                 <p class="cuspoint" @click="toHash(detailData.txHash)">
                   {{ detailData.txHash }}
                 </p>
               </div>
-            </div>
-            <div class="con">
+            </div> -->
+            <!-- <div class="con">
               <div>
                 size:
                 <p>{{ detailData.size == 0 ? "" : detailData.size }}</p>
               </div>
-            </div>
-            <div class="con">
+            </div> -->
+            <!-- <div class="con">
               <div>
                 root:
                 <p>{{ detailData.root }}</p>
@@ -45,11 +45,126 @@
                 {{ key }}:
                 <p>{{ value }}</p>
               </div>
+            </div> -->
+            <el-button @click="startVer()">verify</el-button>
+          </div>
+        </div>
+
+        <div v-if="FlagShow1" class="item_label">
+          <div class="item_label_title_name">
+            Attestation service provider verified
+            <i class="el-icon-check"></i>
+          </div>
+        </div>
+
+        <div v-if="FlagShow2" class="item_label">
+          <div class="item_label_title_name">
+            Attestation on chain samrtcontract verified
+            <i class="el-icon-check"></i>
+          </div>
+          <div class="content_text">
+            <div class="left_lable_name">
+              1. smartcontract:
+            </div>
+            <div class="right_links">
+              <span
+                @click="
+                  openPage(
+                    'https://explorer.ont.io/contract/other/b241508d9073fb24488f4e7f9427a4ce1d5b0f5e/10/1'
+                  )
+                "
+                >https://explorer.ont.io/contract/other/b241508d9073fb24488f4e7f9427a4ce1d5b0f5e/10/1</span
+              >
+            </div>
+          </div>
+          <div class="content_text">
+            <div class="left_lable_name">
+              2. Smartcontract owner
+            </div>
+            <div class="right_links">
+              <span
+                @click="
+                  openPage(
+                    'https://explorer.ont.io/transaction/b699ea32ca64d5e8ca0089e468f0afb1c6fa1007b791b42e2b0a2dd8c6405863'
+                  )
+                "
+                >https://explorer.ont.io/transaction/b699ea32ca64d5e8ca0089e468f0afb1c6fa1007b791b42e2b0a2dd8c6405863</span
+              >
             </div>
           </div>
         </div>
-        <div class="no_data" v-else>
-          No Data
+
+        <div v-if="FlagShow3" class="item_label">
+          <div class="item_label_title_name">
+            Hash proof tree
+            <i class="el-icon-check" v-if="!f3Icon"></i>
+            <i class="el-icon-close" v-else></i>
+          </div>
+          <ul v-if="!f3Icon">
+            <li v-for="(item, index) in proofData" :key="index">
+              <div class="cell1">{{ item.flag1 }}</div>
+              <div class="cell2">{{ item.hash1 }}</div>
+              <div class="cell3">{{ item.flag2 }}</div>
+              <div class="cell4">{{ item.hash2 }}</div>
+            </li>
+          </ul>
+        </div>
+
+        <div v-if="FlagShow4" class="item_label">
+          <div class="item_label_title_name">
+            Onchain record
+            <i class="el-icon-check" v-if="!f4Icon"></i>
+            <i class="el-icon-close" v-else></i>
+          </div>
+          <ul v-if="!f4Icon">
+            <li>
+              <div class="con">
+                <div>
+                  blockHeight:
+                  <p
+                    class="cuspoint"
+                    @click="toExploreHeight(hashData.rootMap.blockHeight)"
+                  >
+                    {{ hashData.rootMap.blockHeight }}
+                  </p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="con">
+                <div>
+                  root:
+                  <p>{{ hashData.rootMap.root }}</p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="con" style="width: 100%">
+                <div>
+                  txhash:
+                  <p
+                    class="cuspoint"
+                    @click="toHash(hashData.transactionMap.txHash)"
+                  >
+                    {{ hashData.transactionMap.txHash }}
+                  </p>
+                </div>
+              </div>
+            </li>
+            <li>
+              <div class="con" style="width: 100%">
+                <div>
+                  hashList:
+                  <p
+                    v-for="item in hashData.transactionMap.hashList"
+                    :key="item"
+                  >
+                    {{ item }}
+                  </p>
+                </div>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -64,48 +179,95 @@ export default {
     return {
       fullscreenLoading: false,
       detailData: null,
-      codes: ""
+      codes: "",
+      proofData: [],
+      hashData: {
+        rootMap: {},
+        transactionMap: {
+          hashList: []
+        }
+      },
+      FlagShow1: false,
+      FlagShow2: false,
+      FlagShow3: false,
+      FlagShow4: false,
+      f3Icon: false,
+      f4Icon: false
     };
   },
   components: {
     TopBar
   },
   methods: {
+    startVer() {
+      this.FlagShow1 = true;
+      setTimeout(() => {
+        this.FlagShow2 = true;
+      }, 400);
+      setTimeout(() => {
+        this.getDetail();
+      }, 600);
+    },
     toExploreHeight(data) {
-      if (process.env.NODE_ENV == "production") {
-        window.open("https://explorer.ont.io/block/" + data, "_blank");
-      } else {
-        window.open(
-          "https://explorer.ont.io/block/" + data + "/testnet",
-          "_blank"
-        );
-      }
+      window.open("https://explorer.ont.io/block/" + data, "_blank");
     },
     toHash(data) {
-      if (process.env.NODE_ENV == "production") {
-        window.open("https://explorer.ont.io/transaction/" + data, "_blank");
-      } else {
-        window.open(
-          "https://explorer.ont.io/transaction/" + data + "/testnet",
-          "_blank"
-        );
-      }
+      window.open("https://explorer.ont.io/transaction/" + data, "_blank");
     },
     async getDetail() {
-      this.fullscreenLoading = true;
-      try {
-        let result = await https.searchFn(this.codes);
-        this.fullscreenLoading = false;
-        if (result.desc == "SUCCESS" && result.error === 0) {
-          this.detailData = result.result;
+      let result = await https.searchFn(this.codes);
+      this.FlagShow3 = true;
+      if (result.desc == "SUCCESS" && result.error === 0) {
+        this.proofData = this.changeArr(result.result);
+        this.getBlockDetail();
+      } else {
+        this.f3Icon = true;
+      }
+    },
+    async getBlockDetail() {
+      let result = await https.witnessFn(this.codes);
+      this.FlagShow4 = true;
+      if (result.desc == "SUCCESS" && result.error === 0) {
+        this.hashData = result.result;
+      } else {
+        this.f4Icon = true;
+      }
+    },
+    openPage(str) {
+      window.open(str, "_blank");
+    },
+    changeArr(obj) {
+      let arr = [obj.root, ...obj.proof.reverse()];
+      let newArr = [];
+      arr.map((item, index) => {
+        let obj = {
+          flag1: null,
+          hash1: null
+        };
+        if (index === 0) {
+          obj = {
+            flag1: "root",
+            hash1: item
+          };
+        } else {
+          obj = {
+            flag1: 0,
+            hash1: item
+          };
         }
-      } catch (error) {}
-      this.fullscreenLoading = false;
+        newArr.push(obj);
+      });
+      let a = {
+        flag1: obj.index % 2 == 0 ? 1 : 0,
+        flag2: 1,
+        hash2: this.codes
+      };
+      newArr.push(a);
+      return newArr;
     }
   },
   mounted() {
     this.codes = this.$route.params.id;
-    this.getDetail();
   }
 };
 </script>
@@ -127,7 +289,51 @@ export default {
     }
   }
 }
-
+.item_label {
+  padding: 0 6%;
+  margin-bottom: 40px;
+  .item_label_title_name {
+    font-size: 20px;
+    font-weight: 600;
+  }
+  .right_links {
+    span {
+      color: blue;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  }
+  ul {
+    padding: 0;
+    li {
+      align-items: center;
+      .cell2,
+      .cell4 {
+        width: 40%;
+        word-break: break-all;
+        padding: 0 20px;
+      }
+      .cell1,
+      .cell3 {
+        text-align: center;
+        width: 10%;
+        border-left: 1px solid #000;
+        border-right: 1px solid #000;
+      }
+    }
+  }
+}
+.item_label.success_icon {
+  .item_label_title_name {
+    position: relative;
+  }
+}
+i.el-icon-check {
+  color: green;
+}
+i.el-icon-close {
+  color: red;
+}
 @media screen and (min-width: 320px) and (max-width: 414px) {
   html {
     font-size: 62.5% !important;
@@ -302,16 +508,16 @@ html {
 .detail-title {
   padding-left: 0;
 }
-.imgDetail {
-  background: url("../assets/img/dianqingback.png") no-repeat;
-  background-size: 100% 100%;
-  background-position: center;
-  height: 40rem;
-  width: 88%;
-  margin: auto;
-  position: relative;
-  text-align: center;
-}
+// .imgDetail {
+//   background: url("../assets/img/dianqingback.png") no-repeat;
+//   background-size: 100% 100%;
+//   background-position: center;
+//   height: 40rem;
+//   width: 88%;
+//   margin: auto;
+//   position: relative;
+//   text-align: center;
+// }
 .absolute {
   position: absolute;
   left: 0;

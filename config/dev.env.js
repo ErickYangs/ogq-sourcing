@@ -10,7 +10,7 @@ module.exports = merge(prodEnv, {
   APP_ONTID: '"did:ont:ANqiHycikgyzkfz36faP5ymXLVg1uovhXh"',
   TOC_API_ROOT: '"http://42.159.142.241:9088/"',
   JWT_API: '"http://192.168.1.129:7091"',
-  VUE_APP_API: '"http://128.1.40.9:2030"'
+  VUE_APP_API: '"http://192.168.1.129:8095"'
 });
 
 // process.env.API_ROOT

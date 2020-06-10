@@ -20,44 +20,24 @@ const router = new Router({
     {
       path: "/",
       name: "Home",
-      component: Home
+      component: Home,
     },
-    // {
-    //   path: "/newEvidence",
-    //   name: "newEvidence",
-    //   component: NewEvidence
-    // },
-    // {
-    //   path: "/reviewEvidence",
-    //   name: "reviewEvidence",
-    //   component: ReviewEvidence
-    // },
-    // {
-    //   path: "/confirm",
-    //   name: "confirm",
-    //   component: Confirm
-    // },
-    // {
-    //   path: "/evidenceRecord",
-    //   name: "evidenceRecord",
-    //   component: EvidenceRecord
-    // },
     {
       path: "/detailEvidence/:id",
       name: "detailEvidence",
-      component: DetailEvidence
+      component: DetailEvidence,
     },
-    {
-      path: "/signup",
-      name: "signup",
-      component: SignUp
-    },
-    {
-      path: "/signin",
-      name: "signin",
-      component: SignIn
-    }
-  ]
+    // {
+    //   path: "/signup",
+    //   name: "signup",
+    //   component: SignUp
+    // },
+    // {
+    //   path: "/signin",
+    //   name: "signin",
+    //   component: SignIn
+    // }
+  ],
 });
 
 function jumpTo(target, origin, next) {
@@ -68,19 +48,19 @@ function jumpTo(target, origin, next) {
 }
 
 // Route guard judges access_token
-router.beforeEach(async (to, from, next) => {
-  let toPath = to.name;
-  if (toPath == "detailEvidence") {
-    if (!getToken() && !getNews("userName")) {
-      Message({ message: "Please login first!", type: "error" });
-      jumpTo({ name: "Home" }, to, next);
-      return;
-    } else {
-      next();
-      return;
-    }
-  }
-  next();
-});
+// router.beforeEach(async (to, from, next) => {
+//   let toPath = to.name;
+//   if (toPath == "detailEvidence") {
+//     if (!getToken() && !getNews("userName")) {
+//       Message({ message: "Please login first!", type: "error" });
+//       jumpTo({ name: "Home" }, to, next);
+//       return;
+//     } else {
+//       next();
+//       return;
+//     }
+//   }
+//   next();
+// });
 
 export default router;

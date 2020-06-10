@@ -8,7 +8,7 @@
           @keyup.enter="search"
           type="text"
           autocomplete="off"
-          placeholder="请输入存证哈希"
+          placeholder="Please enter hash"
           value
           id="id_hash"
           style="vertical-align: middle;"
@@ -19,7 +19,7 @@
           round
           class="searchIcon"
           @click="search"
-          >搜索</el-button
+          >Search</el-button
         >
       </div>
     </div>
@@ -56,9 +56,7 @@ export default {
   methods: {
     async search() {
       if (!this.inputvalue) return;
-      if (!getToken() && !getNews("userName")) {
-        return this.$message.error("Please login first!");
-      }
+
       this.fullscreenLoading = true;
       let result = await https.searchFn(this.inputvalue);
       console.log(result);
