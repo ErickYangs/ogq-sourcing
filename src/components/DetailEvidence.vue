@@ -105,7 +105,13 @@
               <div class="cell1">{{ item.flag1 }}</div>
               <div class="cell2">{{ item.hash1 }}</div>
               <div class="cell3">{{ item.flag2 }}</div>
-              <div class="cell4">{{ item.hash2 }}</div>
+              <div
+                :class="
+                  proofData.length - 1 === index ? 'cell4 redcolor' : 'cell4'
+                "
+              >
+                {{ item.hash2 }}
+              </div>
             </li>
           </ul>
         </div>
@@ -158,6 +164,7 @@
                   <p
                     v-for="item in hashData.transactionMap.hashList"
                     :key="item"
+                    :class="item === codes ? 'redcolor' : ''"
                   >
                     {{ item }}
                   </p>
@@ -249,6 +256,13 @@ export default {
             flag1: "root",
             hash1: item
           };
+        } else if (arr.length - 1 === index) {
+          obj = {
+            hash1: item,
+            flag1: obj.index % 2 == 0 ? 1 : 0,
+            flag2: 1,
+            hash2: this.codes
+          };
         } else {
           obj = {
             flag1: 0,
@@ -257,12 +271,6 @@ export default {
         }
         newArr.push(obj);
       });
-      let a = {
-        flag1: obj.index % 2 == 0 ? 1 : 0,
-        flag2: 1,
-        hash2: this.codes
-      };
-      newArr.push(a);
       return newArr;
     }
   },
@@ -322,6 +330,9 @@ export default {
       }
     }
   }
+}
+.redcolor {
+  color: red !important;
 }
 .item_label.success_icon {
   .item_label_title_name {

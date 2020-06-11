@@ -7,5 +7,5 @@ module.exports = {
   APP_ONTID: '"did:ont:APeE1piJrhsETgpngHsT3hmuvrjAiDQt4N"',
   TOC_API_ROOT: '"http://10.200.37.84:7071/"',
   JWT_API: '"http://172.168.3.68:7091"',
-  VUE_APP_API: '"http://192.168.1.129:8095"'
+  VUE_APP_API: '"http://107.155.56.89:2023"'
 };
